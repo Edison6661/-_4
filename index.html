@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Шифрування файлу</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+  <h1>Шифрування та розшифрування файлів</h1>
+
+  <!-- Вибір файлу -->
+  <input type="file" id="fileInput" />
+  <br><br>
+
+  <!-- Пароль для шифрування -->
+  <label for="password">Введіть пароль:</label>
+  <input type="password" id="password" />
+  <br><br>
+
+  <!-- Кнопки дій -->
+  <button onclick="encryptFile()">Зашифрувати файл</button>
+  <button onclick="decryptFile()">Розшифрувати файл</button>
+  <br><br>
+
+  <!-- Завантаження результату -->
+  <a id="downloadLink" style="display:none;">Завантажити результат</a>
+
+  <script>
+    function encryptFile() {
+      const fileInput = document.getElementById('fileInput');
+      const password = document.getElementById('password').value;
+
+      if (!fileInput.files.length || !password) {
+        alert('Виберіть файл і введіть пароль!');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        const fileContent = event.target.result;
+        const encrypted = CryptoJS.AES.encrypt(fileContent, password).toString();
+
+        // Генерація посилання для завантаження зашифрованого файлу
+        const blob = new Blob([encrypted], { type: 'text/plain' });
+        const link = document.getElementById('downloadLink');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${file.name}.encrypted`;
+        link.style.display = 'block';
+        link.textContent = 'Завантажити зашифрований файл';
+      };
+
+      reader.readAsText(file);
+    }
+
+    function decryptFile() {
+      const fileInput = document.getElementById('fileInput');
+      const password = document.getElementById('password').value;
+
+      if (!fileInput.files.length || !password) {
+        alert('Виберіть файл і введіть пароль!');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        try {
+          const encryptedContent = event.target.result;
+          const decrypted = CryptoJS.AES.decrypt(encryptedContent, password).toString(CryptoJS.enc.Utf8);
+
+          if (!decrypted) throw new Error('Невірний пароль або пошкоджені дані');
+
+          // Генерація посилання для завантаження розшифрованого файлу
+          const blob = new Blob([decrypted], { type: 'text/plain' });
+          const link = document.getElementById('downloadLink');
+          link.href = URL.createObjectURL(blob);
+          link.download = file.name.replace('.encrypted', '');
+          link.style.display = 'block';
+          link.textContent = 'Завантажити розшифрований файл';
+        } catch (error) {
+          alert('Помилка розшифрування: ' + error.message);
+        }
+      };
+
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
